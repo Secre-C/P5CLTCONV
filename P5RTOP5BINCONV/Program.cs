@@ -23,7 +23,6 @@ namespace P5RTOP5BINCONV
                 if (arg0.Extension == ".CLT")
                 {
                     Console.WriteLine($"Attempting to convert { arg0.Name }");
-                    List<UInt32> StringPointers = new List<UInt32>();
 
                     using (BinaryObjectReader P5RCLTFile = new BinaryObjectReader(args[0], Endianness.Big, Encoding.GetEncoding(932)))
                     {
@@ -268,10 +267,8 @@ namespace P5RTOP5BINCONV
                 {
                     Console.WriteLine($"Attempting to convert { arg0.Name }");
 
-                    if (arg0.Name.Contains("corptbl"))
+                    if (arg0.Name.ToLower().Contains("corptbl"))
                     {
-                        List<UInt32> StringPointers = new List<UInt32>();
-
                         using (BinaryObjectReader P5RcorptblFile = new BinaryObjectReader(args[0], Endianness.Little, Encoding.GetEncoding(932)))
                         {
 
@@ -363,10 +360,8 @@ namespace P5RTOP5BINCONV
                             }
                         }
                     }
-                    else if (arg0.Name.Contains("icon") || arg0.Name.Contains("parts")) //Thank you DC for the copy-paste Material
+                    else if (arg0.Name.ToLower().Contains("icon") || arg0.Name.ToLower().Contains("parts")) //Thank you DC for the copy-paste Material
                     {
-                        List<UInt32> StringPointers = new List<UInt32>();
-
                         using (BinaryObjectReader P5RroadmapFile = new BinaryObjectReader(args[0], Endianness.Little, Encoding.GetEncoding(932)))
                         {
 
@@ -405,7 +400,7 @@ namespace P5RTOP5BINCONV
                                     {
                                         float resolutionThing = P5RroadmapFile.ReadSingle();
                                         float convertedResolutionThing = resolutionThing * 0.6666666666666667f;
-                                        if (arg0.Name.Contains("parts"))
+                                        if (arg0.Name.ToLower().Contains("parts"))
                                         {
                                             NewroadmapFile.Write(convertedResolutionThing);
                                         }
@@ -425,10 +420,8 @@ namespace P5RTOP5BINCONV
                             }
                         }
                     }
-                    else if (arg0.Name.Contains("texpack"))
+                    else if (arg0.Name.ToLower().Contains("texpack"))
                     {
-                        List<UInt32> StringPointers = new List<UInt32>();
-
                         using (BinaryObjectReader P5RroadmapFile = new BinaryObjectReader(args[0], Endianness.Little, Encoding.GetEncoding(932)))
                         {
 
@@ -478,10 +471,8 @@ namespace P5RTOP5BINCONV
                             }
                         }
                     }
-                    else if (arg0.Name.Contains("roadmap"))
+                    else if (arg0.Name.ToLower().Contains("roadmap"))
                     {
-                        List<UInt32> StringPointers = new List<UInt32>();
-
                         using (BinaryObjectReader P5RroadmapFile = new BinaryObjectReader(args[0], Endianness.Little, Encoding.GetEncoding(932)))
                         {
 
@@ -518,11 +509,9 @@ namespace P5RTOP5BINCONV
                             }
                         }
                     }
-                    else if (arg0.Name.Contains("baiu") || arg0.Name.Contains("gouu") || arg0.Name.Contains("kanpa")
-                        || arg0.Name.Contains("pollen") || arg0.Name.Contains("rain") || arg0.Name.Contains("snow"))
+                    else if (arg0.Name.ToLower().Contains("baiu") || arg0.Name.ToLower().Contains("gouu") || arg0.Name.ToLower().Contains("kanpa")
+                        || arg0.Name.ToLower().Contains("pollen") || arg0.Name.ToLower().Contains("rain") || arg0.Name.ToLower().Contains("snow"))
                     {
-                        List<UInt32> StringPointers = new List<UInt32>();
-
                         using (BinaryObjectReader P5REnvFile = new BinaryObjectReader(args[0], Endianness.Little, Encoding.GetEncoding(932)))
                         {
 
@@ -572,13 +561,42 @@ namespace P5RTOP5BINCONV
 
                                     P5REnvFile.ReadUInt32();
                                 }
+
                             }
                         }
                     }
-                    else
+                    else if (arg0.Name.ToLower().Contains("dngresultdata"))
                     {
+                        using (BinaryObjectReader P5RDNGResultFile = new BinaryObjectReader(args[0], Endianness.Little, Encoding.GetEncoding(932)))
+                        {
 
-                        List<UInt32> StringPointers = new List<UInt32>();
+                            var savePath = Path.Combine(Path.GetDirectoryName(args[0]), "ConvertedOutput");
+                            System.IO.Directory.CreateDirectory(savePath);
+                            savePath = Path.Combine(savePath, Path.GetFileNameWithoutExtension(arg0.FullName) + ".bin");
+
+                            using (BinaryObjectWriter newDNGResultFile = new BinaryObjectWriter(savePath, Endianness.Little, Encoding.GetEncoding(932)))
+                            {
+                                for (int i = 0; i < P5RDNGResultFile.Length / 0x20; i++)
+                                {
+                                    newDNGResultFile.Write(P5RDNGResultFile.ReadInt32()); // 0x0
+                                    newDNGResultFile.Write(P5RDNGResultFile.ReadInt32()); // msg index
+                                    newDNGResultFile.Write(P5RDNGResultFile.ReadInt32()); // enabling bitflag
+                                    newDNGResultFile.Write(P5RDNGResultFile.ReadInt32()); // disabling bitflag
+                                    newDNGResultFile.Write(P5RDNGResultFile.ReadInt32()); // disabling count
+                                    newDNGResultFile.Write(P5RDNGResultFile.ReadInt32()); // enabling count
+                                    newDNGResultFile.Write(P5RDNGResultFile.ReadInt32()); // count compare value
+                                    P5RDNGResultFile.ReadInt32(); //Royal Padding
+                                }
+                                
+                                while (P5RDNGResultFile.Position < P5RDNGResultFile.Length) //write remainder of file without going past EOF
+                                {
+                                    newDNGResultFile.Write(P5RDNGResultFile.ReadByte());
+                                }
+                            }
+                        }
+                    }
+                    else if(arg0.Name.ToLower().Contains("fnt"))
+                    {
 
                         using (BinaryObjectReader P5RFNTFile = new BinaryObjectReader(args[0], Endianness.Little, Encoding.GetEncoding(932)))
                         {
@@ -711,7 +729,7 @@ namespace P5RTOP5BINCONV
 
                     }
                 }
-                else if (arg0.Extension == ".ftd" && arg0.Name.Contains("fldBGMCnd"))
+                else if (arg0.Extension == ".ftd" && arg0.Name.ToLower().Contains("fldbgmcnd"))
                 {
                     Console.WriteLine($"Attempting to convert { arg0.Name }");
 
@@ -885,7 +903,7 @@ namespace P5RTOP5BINCONV
                                     NewSPDFile.Write(P5RSPDFile.ReadUInt32());
                                 }
                                 float scale;
-                                if (arg0.Name.Contains("4K"))
+                                if (arg0.Name.ToLower().Contains("4k"))
                                 {
                                     scale = 2f;
                                 }
@@ -967,7 +985,7 @@ namespace P5RTOP5BINCONV
                             }
                             for (int j = 0; j < (P5RPCDFile.Length - 56) / 4; j++)
                             {
-                                Single valuef = P5RPCDFile.ReadSingle();
+                                float valuef = P5RPCDFile.ReadSingle();
                                 if ((j != 8 || pcdVersion == 5) && j != 6 && (j != 7 || pcdVersion == 5))
                                 {
                                     NewPCDFile.Write(valuef);
@@ -989,15 +1007,16 @@ namespace P5RTOP5BINCONV
                         System.IO.Directory.CreateDirectory(savePath);
                         savePath = Path.Combine(savePath, Path.GetFileNameWithoutExtension(arg0.FullName) + Path.GetExtension(arg0.Extension));
 
+                        uint Magic = P5REnvFile.ReadUInt32(); //Magic
+                        uint version = P5REnvFile.ReadUInt32();
+                        if (version != 17846416 && version != 17846528)
+                        {
+                            Console.WriteLine("Invalid Env Version: " + version.ToString("X"));
+                            return;
+                        }
+
                         using (BinaryObjectWriter NewEnvFile = new BinaryObjectWriter(savePath, Endianness.Big, Encoding.GetEncoding(932)))
                         {
-                            uint Magic = P5REnvFile.ReadUInt32(); //Magic
-                            uint version = P5REnvFile.ReadUInt32();
-                            if (version != 17846416 && version != 17846528)
-                            {
-                                Console.WriteLine("Invalid Env Version: " + version.ToString("X"));
-                                return;
-                            }
                             NewEnvFile.Write(Magic);
                             NewEnvFile.Write(17846384); //Version
                             P5REnvFile.ReadUInt32();
@@ -1051,7 +1070,9 @@ namespace P5RTOP5BINCONV
                             //Lighting Section
 
                             NewEnvFile.Write(P5REnvFile.ReadByte()); //Enable Graphical Output
-                            NewEnvFile.Write(P5REnvFile.ReadByte()); //Enable Bloom
+                            NewEnvFile.Write((byte)0); //Enable Bloom
+                            P5REnvFile.ReadByte();
+                            //NewEnvFile.Write(P5REnvFile.ReadByte()); //Enable Bloom
                             NewEnvFile.Write(P5REnvFile.ReadByte()); //Enable Glare
                             NewEnvFile.Write((byte)0);
                             P5REnvFile.ReadUInt32();
@@ -1064,11 +1085,11 @@ namespace P5RTOP5BINCONV
                                 P5REnvFile.ReadByte();
                                 P5REnvFile.ReadUInt16();
                             }
-                            NewEnvFile.Write(P5REnvFile.ReadSingle()); //Bloom Amount? * 0.75
+                            NewEnvFile.Write(P5REnvFile.ReadSingle() * 0.6f); //Bloom Amount? * 0.75
                             NewEnvFile.Write(P5REnvFile.ReadSingle()); //Bloom Detail?
                             NewEnvFile.Write(P5REnvFile.ReadSingle()); //Bloom White Level?
                             NewEnvFile.Write(P5REnvFile.ReadSingle()); //Bloom Dark Level?
-                            NewEnvFile.Write(P5REnvFile.ReadSingle()); //Glare Sensivity?
+                            NewEnvFile.Write(P5REnvFile.ReadSingle() / 67f); //Glare Sensivity?
                             int loopCount;
                             if (version == 17846528)
                             {
@@ -1091,7 +1112,7 @@ namespace P5RTOP5BINCONV
 
                             NewEnvFile.Write(P5REnvFile.ReadByte());
                             P5REnvFile.ReadUInt32();
-                            NewEnvFile.Write(P5REnvFile.ReadSingle() / 4); //Field1F2
+                            NewEnvFile.Write(P5REnvFile.ReadSingle() / 2.6f); //Field1F2
                             NewEnvFile.Write(P5REnvFile.ReadSingle()); //Field1F6
                             NewEnvFile.Write(P5REnvFile.ReadSingle()); //Field1FA
                             NewEnvFile.Write(P5REnvFile.ReadByte()); //Field1FD
@@ -1133,8 +1154,8 @@ namespace P5RTOP5BINCONV
                             NewEnvFile.Write(P5REnvFile.ReadSingle()); //Cyan
                             NewEnvFile.Write(P5REnvFile.ReadSingle()); //Magenta
                             NewEnvFile.Write(P5REnvFile.ReadSingle()); //Yellow
-                            NewEnvFile.Write(P5REnvFile.ReadSingle()); //Dodge
-                            NewEnvFile.Write(P5REnvFile.ReadSingle()); //Burn
+                            NewEnvFile.Write(P5REnvFile.ReadSingle() / 1.4f); //Dodge
+                            NewEnvFile.Write(P5REnvFile.ReadSingle() / 1.2f); //Burn
 
                             //Second Unknown Section
 
